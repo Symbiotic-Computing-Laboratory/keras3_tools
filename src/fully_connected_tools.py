@@ -37,13 +37,13 @@ def create_dense_stack(tensor,
                        activation='elu',
                        regularizer = None,
                        dropout=None,
-                       name_last='output',
-                       activation_last=None,
+                       #name_last='output',
+                       #activation_last=None,
                        batch_normalization=False):
 
 
-    if activation_last is None:
-        activation_last = activation
+    #if activation_last is None:
+    #activation_last = activation
     
     for i, n in enumerate(n_hidden):
         if batch_normalization:
