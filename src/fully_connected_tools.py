@@ -38,7 +38,7 @@ def create_dense_stack(tensor,
                        regularizer = None,
                        dropout=None,
                        #name_last='output',
-                       #activation_last=None,
+                       activation_last=None,
                        batch_normalization=False):
 
 
@@ -71,7 +71,7 @@ def create_fully_connected_network(input_shape=None,
                                   lambda1:float=None,
                                   lambda2:float=None,
                                   dropout=None,
-                                  name_last='output',
+                                  # name_last='output',
                                   activation_last=None,
                                   batch_normalization=False,
                                   learning_rate=0.001,
@@ -98,7 +98,7 @@ def create_fully_connected_network(input_shape=None,
                                 regularizer=regularizer,
                                 dropout=dropout,
                                 name='hidden',
-                                name_last=name_last,
+                                # name_last=name_last,
                                 activation_last=activation_last,
                                 batch_normalization=batch_normalization)
 
