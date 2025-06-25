@@ -20,161 +20,162 @@ from keras.layers import Dense, Flatten, BatchNormalization, Dropout, Concatenat
 from keras.layers import Convolution1D, MaxPooling1D, AveragePooling1D, GlobalMaxPooling1D, SpatialDropout1D
 from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D, GlobalMaxPooling2D, SpatialDropout2D
 from keras.layers import Convolution3D, MaxPooling3D, AveragePooling3D, GlobalMaxPooling3D, SpatialDropout3D
-
-conv_operators = {'C1': (Convolution1D, MaxPooling1D, AveragePooling1D, GlobalMaxPooling1D, SpatialDropout1D),
-                  'C2': (Convolution2D, MaxPooling2D, AveragePooling2D, GlobalMaxPooling2D, SpatialDropout2D),
-                  'C3': (Convolution3D, MaxPooling3D, AveragePooling3D, GlobalMaxPooling3D, SpatialDropout3D),
-                  }
-
-#import re
-
-#import sklearn.metrics
-
 from fully_connected_tools import *
 
-def create_cnn_stack(tensor,
-                     conv_filters:[int],
-                     conv_kernel_size:[int],
-                     conv_pool:[int],
-                     conv_strides:[int],
-                     conv_type:str='C2',
-                     name_base:str='',
-                     conv_activation:str='elu',
-                     regularizer=None,
-                     s_dropout=None,
-                     padding='valid',
-                     batch_normalization=False,
-                     global_max_pool=False):
-    '''
-    Create a linear convolutional stack
+class ConvolutionalNeuralNetwork:
+    conv_operators = {'C1': (Convolution1D, MaxPooling1D, AveragePooling1D, GlobalMaxPooling1D, SpatialDropout1D),
+                      'C2': (Convolution2D, MaxPooling2D, AveragePooling2D, GlobalMaxPooling2D, SpatialDropout2D),
+                      'C3': (Convolution3D, MaxPooling3D, AveragePooling3D, GlobalMaxPooling3D, SpatialDropout3D),
+                      }
 
-    '''
-    # Access the layer constructors for the dimensionality of the input
-    conv, mp, ap, gmp, sd = conv_operators[conv_type]
-
-    # Deal with case where conv_strides is None (translate to all 1s)
-    if conv_strides is None:
-        conv_strides = [1]*min([len(conv_filters), len(conv_kernel_size), len(conv_pool)])
-    
-    # Loop over all convolutional layers
-    for i, (f,k,p,s) in enumerate(zip(conv_filters, conv_kernel_size, conv_pool, conv_strides)):
-        tensor = conv(filters=f,
-                      kernel_size=k,
-                      strides=s,
-                      padding=padding,
-                      use_bias=True,
-                      kernel_initializer='truncated_normal',
-                      bias_initializer='zeros',
-                      name='%s%d'%(name_base,i),
-                      activation=conv_activation,
-                      kernel_regularizer=regularizer)(tensor)
+    @staticmethod
+    def create_cnn_stack(tensor,
+                         conv_filters:[int],
+                         conv_kernel_size:[int],
+                         conv_pool:[int],
+                         conv_strides:[int],
+                         conv_type:str='C2',
+                         name_base:str='',
+                         conv_activation:str='elu',
+                         regularizer=None,
+                         s_dropout=None,
+                         padding='valid',
+                         batch_normalization=False,
+                         global_max_pool=False):
+        '''
+        Create a linear convolutional stack
         
-        # Possible dropout
-        if s_dropout is not None:
-            tensor = sd(s_dropout)(tensor)
+        '''
+        # Access the layer constructors for the dimensionality of the input
+        conv, mp, ap, gmp, sd = ConvolutionalNeuralNetwork.conv_operators[conv_type]
 
-        if batch_normalization:
-            tensor = bn()(tensor)
+        # Deal with case where conv_strides is None (translate to all 1s)
+        if conv_strides is None:
+            conv_strides = [1]*min([len(conv_filters), len(conv_kernel_size), len(conv_pool)])
+    
+        # Loop over all convolutional layers
+        for i, (f,k,p,s) in enumerate(zip(conv_filters, conv_kernel_size, conv_pool, conv_strides)):
+            tensor = conv(filters=f,
+                          kernel_size=k,
+                          strides=s,
+                          padding=padding,
+                          use_bias=True,
+                          kernel_initializer='truncated_normal',
+                          bias_initializer='zeros',
+                          name='%s%d'%(name_base,i),
+                          activation=conv_activation,
+                          kernel_regularizer=regularizer)(tensor)
+        
+            # Possible dropout
+            if s_dropout is not None:
+                tensor = sd(s_dropout)(tensor)
 
-        if p is not None and p > 1:
-            tensor = mp(p,
-                        strides=p,
-                        padding=padding)(tensor)
+            if batch_normalization:
+                tensor = bn()(tensor)
+
+            if p is not None and p > 1:
+                tensor = mp(p,
+                            strides=p,
+                            padding=padding)(tensor)
             
-    if global_max_pool:
-        tensor=gmp()(tensor)
-    return tensor
+        if global_max_pool:
+            tensor=gmp()(tensor)
+
+            
+        return tensor
 
 
-def create_cnn_network(input_shape=None,
-                       conv_kernel_size=[3,3],
-                       conv_padding='valid',
-                       conv_number_filters=[8,16],
-                       conv_activation='elu',
-                       conv_pool_size=[0,2],
-                       conv_strides=None,
-                       spatial_dropout=None,
-                       conv_batch_normalization=False,
-                       n_hidden=[10,2],
-                       output_shape=[1],
-                       dropout_input=False,
-                       name_base='',
-                       activation='elu',
-                       lambda1:float=None,
-                       lambda2:float=None,
-                       dropout=None,
-                       name_last='output',
-                       activation_last=None,
-                       batch_normalization=False,
-                       learning_rate=0.001,
-                       loss='mse',
-                       metrics=[]):
+    @staticmethod
+    def create_cnn_network(input_shape=None,
+                           conv_kernel_size=[3,3],
+                           conv_padding='valid',
+                           conv_number_filters=[8,16],
+                           conv_activation='elu',
+                           conv_pool_size=[0,2],
+                           conv_strides=None,
+                           spatial_dropout=None,
+                           conv_batch_normalization=False,
+                           n_hidden=[10,2],
+                           output_shape=[1],
+                           dropout_input=False,
+                           name_base='',
+                           activation='elu',
+                           lambda1:float=None,
+                           lambda2:float=None,
+                           dropout=None,
+                           name_last='output',
+                           activation_last=None,
+                           batch_normalization=False,
+                           learning_rate=0.001,
+                           loss='mse',
+                           metrics=[],
+                           opt=None):
 
-    # TODO: check input_shape form
-    input_len = len(input_shape)
-    assert input_len >= 2 and input_len <= 4, "CNN Input Shape must have dimensionality 2, 3, or 4"
+        # TODO: check input_shape form
+        input_len = len(input_shape)
+        assert input_len >= 2 and input_len <= 4, "CNN Input Shape must have dimensionality 2, 3, or 4"
     
-    # TODO: check output_shape form
+        # TODO: check output_shape form
     
-    # Convolution dimensionality
-    conv_type = ['C1', 'C2', 'C3'][len(input_shape)-2]
-    print("Convolution type:", conv_type)
+        # Convolution dimensionality
+        conv_type = ['C1', 'C2', 'C3'][len(input_shape)-2]
+        print("Convolution type:", conv_type)
     
-    # Resolve regularizer
-    regularizer = create_regularizer(lambda1, lambda2)
+        # Resolve regularizer
+        regularizer = FullyConnectedNetwork.create_regularizer(lambda1, lambda2)
 
-    # Input layer
-    input_tensor = tensor = Input(shape=input_shape,
-                                  name=name_base + 'input')
+        # Input layer
+        input_tensor = tensor = Input(shape=input_shape,
+                                      name=name_base + 'input')
     
-    # Dropout input features?
-    #if dropout_input is not None:
-    #tensor = Dropout(rate=dropout_input, name=name_base+"dropout_input")(tensor)
-    tensor = create_cnn_stack(tensor,
-                              conv_filters=conv_number_filters,
-                              conv_kernel_size=conv_kernel_size,
-                              conv_pool=conv_pool_size,
-                              conv_strides=conv_strides,
-                              conv_type=conv_type,
-                              name_base=name_base + '_C',
-                              conv_activation=conv_activation,
-                              regularizer=regularizer,
-                              s_dropout=spatial_dropout,
-                              padding=conv_padding,
-                              batch_normalization=conv_batch_normalization,
-                              global_max_pool=True)
+        # Dropout input features?
+        #if dropout_input is not None:
+        #tensor = Dropout(rate=dropout_input, name=name_base+"dropout_input")(tensor)
+        tensor = ConvolutionalNeuralNetwork.create_cnn_stack(tensor,
+                                                             conv_filters=conv_number_filters,
+                                                             conv_kernel_size=conv_kernel_size,
+                                                             conv_pool=conv_pool_size,
+                                                             conv_strides=conv_strides,
+                                                             conv_type=conv_type,
+                                                             name_base=name_base + '_C',
+                                                             conv_activation=conv_activation,
+                                                             regularizer=regularizer,
+                                                             s_dropout=spatial_dropout,
+                                                             padding=conv_padding,
+                                                             batch_normalization=conv_batch_normalization,
+                                                             global_max_pool=True)
 
-    # Create the rest of the network
-    tensor = create_dense_stack(tensor=tensor,
-                                n_hidden=n_hidden,
-                                activation=activation,
-                                regularizer=regularizer,
-                                dropout=dropout,
-                                name=name_base+'_FC',
-                                #name_last=name_last,
-                                #activation_last=activation_last,
-                                batch_normalization=batch_normalization)
+        # Create the rest of the network
+        tensor = FullyConnectedNetwork.create_dense_stack(tensor=tensor,
+                                                          n_hidden=n_hidden,
+                                                          activation=activation,
+                                                          regularizer=regularizer,
+                                                          dropout=dropout,
+                                                          name=name_base+'_FC',
+                                                          #name_last=name_last,
+                                                          #activation_last=activation_last,
+                                                          batch_normalization=batch_normalization)
 
-    # Output layer
-    if batch_normalization:
-        tensor = BatchNormalization()(tensor)
+        # Output layer
+        if batch_normalization:
+            tensor = BatchNormalization()(tensor)
 
-    tensor = Dense(output_shape[0],
-                   use_bias=True,
-                   bias_initializer='zeros',
-                   name=name_base + 'output',
-                   activation=activation_last,
-                   kernel_regularizer=regularizer,
-                   kernel_initializer='truncated_normal')(tensor)
+        tensor = Dense(output_shape[0],
+                       use_bias=True,
+                       bias_initializer='zeros',
+                       name=name_base + 'output',
+                       activation=activation_last,
+                       kernel_regularizer=regularizer,
+                       kernel_initializer='truncated_normal')(tensor)
 
-    # TODO: other optimizers?
-    opt = keras.optimizers.Adam(learning_rate=learning_rate,
-                                amsgrad=False)
+        if opt is None:
+            opt = keras.optimizers.Adam(learning_rate=learning_rate,
+                                        amsgrad=False)
 
-    # Create the model
-    model = Model(input_tensor, tensor)
+        # Create the model
+        model = Model(input_tensor, tensor)
     
-    model.compile(loss=loss, optimizer=opt, metrics=metrics)
+        model.compile(loss=loss, optimizer=opt, metrics=metrics)
 
-    return model
+        return model
     
