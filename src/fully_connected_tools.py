@@ -17,7 +17,7 @@ from functools import reduce
 import operator
 
 # Keras3
-from keras.layers import Input, Dense, Dropout, Reshape, Activation
+from keras.layers import Input, Dense, Dropout, Reshape, Activation, BatchNormalization
 from keras.models import Sequential, Model
 
 class FullyConnectedNetwork:

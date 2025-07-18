@@ -160,13 +160,33 @@ class ConvolutionalNeuralNetwork:
         if batch_normalization:
             tensor = BatchNormalization()(tensor)
 
-        tensor = Dense(output_shape[0],
-                       use_bias=True,
-                       bias_initializer='zeros',
-                       name=name_base + 'output',
-                       activation=activation_last,
-                       kernel_regularizer=regularizer,
-                       kernel_initializer='truncated_normal')(tensor)
+        if len(output_shape) == 1:
+            # Output is 1D
+            tensor = Dense(output_shape[0],
+                           use_bias=True,
+                           bias_initializer='zeros',
+                           name=name_base + 'output',
+                           activation=activation_last,
+                           kernel_regularizer=regularizer,
+                           kernel_initializer='truncated_normal')(tensor)
+        else:
+            # Output is kD, where k > 1
+            # Linear transformation from previous layer to one that is the product of
+            #   all the output dimensions, then reshape, then non-linearity
+            #
+            #  This feature is useful for cases such as outputing K probability distributions for
+            #   which we are using softmax as the non-linearity.
+            
+            tensor = Dense(reduce(operator.mul, output_shape, 1),
+                           use_bias=True,
+                           bias_initializer='zeros',
+                           name=name_base + 'output_vector',
+                           activation='linear',
+                           kernel_regularizer=regularizer,
+                           kernel_initializer='truncated_normal')(tensor)
+            tensor = Reshape(output_shape)(tensor)
+            tensor = Activation(activation_last)(tensor)
+
 
         if opt is None:
             opt = keras.optimizers.Adam(learning_rate=learning_rate,
