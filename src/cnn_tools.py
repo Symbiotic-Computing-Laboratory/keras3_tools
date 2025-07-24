@@ -71,7 +71,7 @@ class ConvolutionalNeuralNetwork:
                 tensor = sd(s_dropout)(tensor)
 
             if batch_normalization:
-                tensor = bn()(tensor)
+                tensor = BatchNormalization()(tensor)
 
             if p is not None and p > 1:
                 tensor = mp(p,
