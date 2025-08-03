@@ -150,5 +150,3 @@ class FullyConnectedNetwork:
         return model
     
 
-            
-
