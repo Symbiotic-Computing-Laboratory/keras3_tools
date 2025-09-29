@@ -32,6 +32,7 @@ class ConvolutionalNeuralNetwork:
     def create_cnn_stack(tensor,
                          conv_filters:[int],
                          conv_kernel_size:[int],
+                         conv_pool_average:[int],
                          conv_pool:[int],
                          conv_strides:[int],
                          conv_type:str='C2',
@@ -52,9 +53,21 @@ class ConvolutionalNeuralNetwork:
         # Deal with case where conv_strides is None (translate to all 1s)
         if conv_strides is None:
             conv_strides = [1]*min([len(conv_filters), len(conv_kernel_size), len(conv_pool)])
+
+        # Also deal with conv_pool_average being None
+        if conv_pool_average is None:
+            conv_pool_average = [None]*min([len(conv_filters), len(conv_kernel_size), len(conv_pool)])
     
         # Loop over all convolutional layers
-        for i, (f,k,p,s) in enumerate(zip(conv_filters, conv_kernel_size, conv_pool, conv_strides)):
+        for i, (f,k,avg_p,p,s) in enumerate(zip(conv_filters, conv_kernel_size, conv_pool_average, conv_pool, conv_strides)):
+            
+            # Average pooling
+            if avg_p is not None and avg_p > 1:
+                tensor = ap(avg_p,
+                            strides=avg_p,
+                            padding=padding)(tensor)
+
+            # Convolution
             tensor = conv(filters=f,
                           kernel_size=k,
                           strides=s,
@@ -70,17 +83,19 @@ class ConvolutionalNeuralNetwork:
             if s_dropout is not None:
                 tensor = sd(s_dropout)(tensor)
 
+            # Batch Norm
             if batch_normalization:
                 tensor = BatchNormalization()(tensor)
 
+            # Max pooling
             if p is not None and p > 1:
                 tensor = mp(p,
                             strides=p,
                             padding=padding)(tensor)
-            
+
+        # Tack on global max pooling
         if global_max_pool:
             tensor=gmp()(tensor)
-
             
         return tensor
 
@@ -91,6 +106,7 @@ class ConvolutionalNeuralNetwork:
                            conv_padding='valid',
                            conv_number_filters=[8,16],
                            conv_activation='elu',
+                           conv_pool_average_size=None,
                            conv_pool_size=[0,2],
                            conv_strides=None,
                            spatial_dropout=None,
@@ -134,6 +150,7 @@ class ConvolutionalNeuralNetwork:
         tensor = ConvolutionalNeuralNetwork.create_cnn_stack(tensor,
                                                              conv_filters=conv_number_filters,
                                                              conv_kernel_size=conv_kernel_size,
+                                                             conv_pool_average=conv_pool_average_size,
                                                              conv_pool=conv_pool_size,
                                                              conv_strides=conv_strides,
                                                              conv_type=conv_type,
