@@ -205,9 +205,9 @@ class ConvolutionalNeuralNetwork:
             tensor = Activation(activation_last)(tensor)
 
 
-        if opt is None:
-            opt = keras.optimizers.Adam(learning_rate=learning_rate,
-                                        amsgrad=False)
+        # if opt is None:
+        #     opt = keras.optimizers.Adam(learning_rate=learning_rate,
+        #                                 amsgrad=False)
 
         # Create the model
         model = Model(input_tensor, tensor)
