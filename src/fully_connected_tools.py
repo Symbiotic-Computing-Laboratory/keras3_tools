@@ -139,8 +139,7 @@ class FullyConnectedNetwork:
 
         if opt is None:
             # Default optimizer
-            if args.optimizer == 'adam':
-                opt = keras.optimizers.Adam(learning_rate=learning_rate,
+            opt = keras.optimizers.Adam(learning_rate=learning_rate,
                                             amsgrad=False)
 
         # Create the model
