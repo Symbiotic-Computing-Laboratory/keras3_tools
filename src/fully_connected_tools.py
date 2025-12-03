@@ -19,9 +19,26 @@ import operator
 # Keras3
 from keras.layers import Input, Dense, Dropout, Reshape, Activation, BatchNormalization
 from keras.models import Sequential, Model
+import keras.saving as saving
+import keras.ops as ops
+
+@saving.register_keras_serializable(package="zero2neuro")
+def elup1(x):
+    # elu(x) + 1
+    return ops.elu(x)+1.0
 
 class FullyConnectedNetwork:
-    
+
+    @staticmethod
+    def translate_activation_function(name:str):
+        if isinstance(name, str):
+            if name == 'elup1':
+                return elup1
+            else:
+                return name
+        else:
+            return name
+        
     @staticmethod
     def create_regularizer(lambda1:float=None, lambda2:float=None):
         if lambda1 is None:
@@ -45,6 +62,8 @@ class FullyConnectedNetwork:
                            #name_last='output',
                            #activation_last=None,
                            batch_normalization=False):
+
+        activation = FullyConnectedNetwork.translate_activation_function(activation)
 
         for i, n in enumerate(n_hidden):
             if batch_normalization:
@@ -83,6 +102,8 @@ class FullyConnectedNetwork:
 
         # TODO: check input_shape form
         # TODO: check output_shape form
+
+        activation_last = FullyConnectedNetwork.translate_activation_function(activation_last)
 
         regularizer = FullyConnectedNetwork.create_regularizer(lambda1, lambda2)
 

@@ -50,6 +50,9 @@ class ConvolutionalNeuralNetwork:
         # Access the layer constructors for the dimensionality of the input
         conv, mp, ap, gmp, sd = ConvolutionalNeuralNetwork.conv_operators[conv_type]
 
+        conv_activation = FullyConnectedNetwork.translate_activation_function(conv_activation)
+
+
         # Deal with case where conv_strides is None (translate to all 1s)
         if conv_strides is None:
             conv_strides = [1]*min([len(conv_filters), len(conv_kernel_size), len(conv_pool)])
@@ -132,7 +135,10 @@ class ConvolutionalNeuralNetwork:
         assert input_len >= 2 and input_len <= 4, "CNN Input Shape must have dimensionality 2, 3, or 4"
     
         # TODO: check output_shape form
-    
+
+        activation = FullyConnectedNetwork.translate_activation_function(activation)
+        activation_last = FullyConnectedNetwork.translate_activation_function(activation_last)
+
         # Convolution dimensionality
         conv_type = ['C1', 'C2', 'C3'][len(input_shape)-2]
         print("Convolution type:", conv_type)
