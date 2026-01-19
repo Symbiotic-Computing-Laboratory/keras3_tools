@@ -50,6 +50,7 @@ class ConvolutionalNeuralNetwork:
         # Access the layer constructors for the dimensionality of the input
         conv, mp, ap, gmp, sd = ConvolutionalNeuralNetwork.conv_operators[conv_type]
 
+        # Handle custom activation function strings
         conv_activation = FullyConnectedNetwork.translate_activation_function(conv_activation)
 
 
@@ -60,7 +61,7 @@ class ConvolutionalNeuralNetwork:
         # Also deal with conv_pool_average being None
         if conv_pool_average is None:
             conv_pool_average = [None]*min([len(conv_filters), len(conv_kernel_size), len(conv_pool)])
-    
+
         # Loop over all convolutional layers
         for i, (f,k,avg_p,p,s) in enumerate(zip(conv_filters, conv_kernel_size, conv_pool_average, conv_pool, conv_strides)):
             
