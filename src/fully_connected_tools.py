@@ -88,6 +88,7 @@ class FullyConnectedNetwork:
 
     @staticmethod
     def create_fully_connected_network(input_shape=None,
+                                       input_dtype=None,
                                        batch_normalization_input=False,
                                        n_hidden=[10,2],
                                        output_shape=[1],
@@ -103,18 +104,76 @@ class FullyConnectedNetwork:
                                        learning_rate=0.001,
                                        loss='mse',
                                        metrics=[],
-                                       opt=None):
+                                       opt=None,
+                                       **kwargs):
 
+
+        ##################
+        # Less frequentyly used arguments are in kwargs
+
+        # Support for tokenizer and embedding layers
+        tokenizer = kwargs.pop("tokenizer", False)
+        embedding = kwargs.pop("embedding", False)
+        tokenizer_max_tokens = kwargs.pop("tokenizer_max_tokens", None)
+        tokenizer_standardize = kwargs.pop("tokenizer_standardize", "lower_and_strip_punctuation")
+        tokenizer_split = kwargs.pop("tokenizer_split", "whitespace")
+        tokenizer_output_sequence_length = kwargs.pop("tokenizer_output_sequence_length", None)
+        tokenizer_vocabulary = kwargs.pop("tokenizer_vocabulary", None)
+        tokenizer_encoding = kwargs.pop("tokenizer_encoding", "utf-8")
+        embedding_dimensions = kwargs.pop("embedding_dimensions", None)
+        ##################
+
+        model_text_vectorization = None
+
+        # Infer input dtype
+        if input_dtype is None:
+            input_dtype = "float32"
+
+            if tokenizer:
+                input_dtype = "string"
+                
+            elif embedding:
+                input_dtype = "int32"
+        
+        ##################
         # TODO: check input_shape form
         # TODO: check output_shape form
 
+        activation = FullyConnectedNetwork.translate_activation_function(activation)
         activation_last = FullyConnectedNetwork.translate_activation_function(activation_last)
 
         regularizer = FullyConnectedNetwork.create_regularizer(lambda1, lambda2)
 
         # Input layer
+        print("INPUT SHAPE", str(input_shape))
+        #input_tensor = tensor = Input(shape=input_shape,
         input_tensor = tensor = Input(shape=(input_shape[0],),
-                                      name=name_base + 'input')
+                                      name=name_base + 'input',
+                                      dtype=input_dtype)
+
+        # Optional tokenizer
+        if tokenizer:
+            # Translation from strings to ints
+            model_text_vectorization = keras.layers.TextVectorization(max_tokens=tokenizer_max_tokens,
+                                                    standardize=tokenizer_standardize,
+                                                    split=tokenizer_split,
+                                                    output_sequence_length=tokenizer_output_sequence_length,
+                                                    vocabulary=tokenizer_vocabulary,
+                                                    encoding=tokenizer_encoding,
+                                                    )
+            tensor = model_text_vectorization(tensor)
+
+        # Embedding required if we have a tokenizer, but can have embedding without tokenizer
+        if tokenizer or embedding:
+            # Translation from int tokens to embeddings
+            tensor = keras.layers.Embedding(
+                input_dim=tokenizer_max_tokens,
+                output_dim=embedding_dimensions,
+                )(tensor)
+
+            # Flatten so that we can interface to the rest of the FC network
+            tensor = keras.layers.Flatten()(tensor)
+            
 
         # Batch Normalize the inputs
         if batch_normalization_input:
@@ -177,6 +236,9 @@ class FullyConnectedNetwork:
     
         model.compile(loss=loss, optimizer=opt, metrics=metrics)
 
-        return model
+        if model_text_vectorization is None:
+            return model
+        else:
+            return model, model_text_vectorization
     
 

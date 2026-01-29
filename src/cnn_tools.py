@@ -106,6 +106,7 @@ class ConvolutionalNeuralNetwork:
 
     @staticmethod
     def create_cnn_network(input_shape=None,
+                           input_dtype=None,
                            conv_kernel_size=[3,3],
                            conv_padding='valid',
                            conv_number_filters=[8,16],
@@ -129,11 +130,42 @@ class ConvolutionalNeuralNetwork:
                            learning_rate=0.001,
                            loss='mse',
                            metrics=[],
-                           opt=None):
+                           opt=None,
+                           **kwargs):
+
+        ##################
+        # Less frequentyly used arguments are in kwargs
+
+        # Support for tokenizer and embedding layers
+        tokenizer = kwargs.pop("tokenizer", False)
+        embedding = kwargs.pop("embedding", False)
+        tokenizer_max_tokens = kwargs.pop("tokenizer_max_tokens", None)
+        tokenizer_standardize = kwargs.pop("tokenizer_standardize", "lower_and_strip_punctuation")
+        tokenizer_split = kwargs.pop("tokenizer_split", "whitespace")
+        tokenizer_output_sequence_length = kwargs.pop("tokenizer_output_sequence_length", None)
+        tokenizer_vocabulary = kwargs.pop("tokenizer_vocabulary", None)
+        tokenizer_encoding = kwargs.pop("tokenizer_encoding", "utf-8")
+        embedding_dimensions = kwargs.pop("embedding_dimensions", None)
+        ##################
+
+        model_text_vectorization = None
+
+        
+        # Infer input dtype
+        if input_dtype is None:
+            input_dtype = "float32"
+
+            if tokenizer:
+                input_dtype = "string"
+                
+            elif embedding:
+                input_dtype = "int32"
+        
+        ##################
 
         # TODO: check input_shape form
         input_len = len(input_shape)
-        assert input_len >= 2 and input_len <= 4, "CNN Input Shape must have dimensionality 2, 3, or 4"
+        assert (input_len >= 2 and input_len <= 4) or (input_len == 1 and tokenizer), "CNN Input Shape must have dimensionality 2, 3, or 4"
     
         # TODO: check output_shape form
 
@@ -141,7 +173,13 @@ class ConvolutionalNeuralNetwork:
         activation_last = FullyConnectedNetwork.translate_activation_function(activation_last)
 
         # Convolution dimensionality
-        conv_type = ['C1', 'C2', 'C3'][len(input_shape)-2]
+        # Tokenizer only supports 1D.  Otherwise, infer from input shape
+
+        if tokenizer:
+            conv_type = 'C1'
+        else:
+            conv_type = ['C1', 'C2', 'C3'][len(input_shape)-2]
+            
         print("Convolution type:", conv_type)
     
         # Resolve regularizer
@@ -149,8 +187,30 @@ class ConvolutionalNeuralNetwork:
 
         # Input layer
         input_tensor = tensor = Input(shape=input_shape,
-                                      name=name_base + 'input')
-    
+                                      name=name_base + 'input',
+                                      dtype=input_dtype)
+
+        # Optional tokenizer
+        if tokenizer:
+            # Translation from strings to ints
+            model_text_vectorization = keras.layers.TextVectorization(max_tokens=tokenizer_max_tokens,
+                                                    standardize=tokenizer_standardize,
+                                                    split=tokenizer_split,
+                                                    output_sequence_length=tokenizer_output_sequence_length,
+                                                    vocabulary=tokenizer_vocabulary,
+                                                    encoding=tokenizer_encoding,
+                                                    )
+            tensor = model_text_vectorization(tensor)
+
+        # Embedding required if we have a tokenizer, but can have embedding without tokenizer
+        if tokenizer or embedding:
+            # Translation from int tokens to embeddings
+            tensor = keras.layers.Embedding(
+                input_dim=tokenizer_max_tokens,
+                output_dim=embedding_dimensions,
+                )(tensor)
+
+
         # Dropout input features?
         #if dropout_input is not None:
         #tensor = Dropout(rate=dropout_input, name=name_base+"dropout_input")(tensor)
@@ -221,5 +281,8 @@ class ConvolutionalNeuralNetwork:
     
         model.compile(loss=loss, optimizer=opt, metrics=metrics)
 
-        return model
+        if model_text_vectorization is None:
+            return model
+        else:
+            return model, model_text_vectorization
     
