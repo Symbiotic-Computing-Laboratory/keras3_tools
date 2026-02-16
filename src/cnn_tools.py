@@ -18,7 +18,7 @@ import keras
 from keras.models import Sequential, Model
 from keras.layers import InputLayer, Input, BatchNormalization
 from keras.layers import Dense, Flatten, BatchNormalization, Dropout, Concatenate
-from keras.layers import Convolution1D, MaxPooling1D, AveragePooling1D, GlobalMaxPooling1D, SpatialDropout1D, SimpleRNN
+from keras.layers import Convolution1D, MaxPooling1D, AveragePooling1D, GlobalMaxPooling1D, SpatialDropout1D, SimpleRNN, GRU, LSTM
 from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D, GlobalMaxPooling2D, SpatialDropout2D
 from keras.layers import Convolution3D, MaxPooling3D, AveragePooling3D, GlobalMaxPooling3D, SpatialDropout3D
 from fully_connected_tools import *
@@ -115,13 +115,32 @@ class ConvolutionalNeuralNetwork:
                                        unroll=rnn_unroll,
                                        kernel_regularizer=regularizer,
                                        recurrent_regularizer=rnn_regularizer,
-                                       name='%s_R%d'%(name_base,i),                                   
+                                       name='%s_RNN%d'%(name_base,i),                                   
                                        )(tensor)
                 elif rnn_type == 'gru':
-                    pass
+                    tensor = GRU(units=rf,
+                                 activation=rnn_activation,
+                                 dropout=s_dropout,
+                                 recurrent_dropout=rnn_dropout,
+                                 return_sequences=True,
+                                 unroll=rnn_unroll,
+                                 kernel_regularizer=regularizer,
+                                 recurrent_regularizer=rnn_regularizer,
+                                 name='%s_GRU%d'%(name_base,i),                                   
+                                 )(tensor)
 
                 elif rnn_type == 'lstm':
-                    pass
+                    tensor = LSTM(units=rf,
+                                 activation=rnn_activation,
+                                 dropout=s_dropout,
+                                 recurrent_dropout=rnn_dropout,
+                                 return_sequences=True,
+                                 unroll=rnn_unroll,
+                                 kernel_regularizer=regularizer,
+                                 recurrent_regularizer=rnn_regularizer,
+                                 name='%s_LSTM%d'%(name_base,i),                                   
+                                 )(tensor)
+
 
             # Convolution
             if f is not None:
@@ -168,13 +187,33 @@ class ConvolutionalNeuralNetwork:
                                    unroll=rnn_unroll,
                                    kernel_regularizer=regularizer,
                                    recurrent_regularizer=rnn_regularizer,
-                                   name='%s_R_last'%(name_base),
+                                   name='%s_RNN_last'%(name_base),
                                    )(tensor)
             elif rnn_type == 'gru':
-                pass
+                tensor = GRU(units=rnn_filters_last,
+                             activation=rnn_activation,
+                             dropout=s_dropout,
+                             recurrent_dropout=rnn_dropout,
+                             return_sequences=False,
+                             unroll=rnn_unroll,
+                             kernel_regularizer=regularizer,
+                             recurrent_regularizer=rnn_regularizer,
+                             name='%s_GRU_last'%(name_base),
+                             )(tensor)
+
 
             elif rnn_type == 'lstm':
-                pass
+                tensor = LSTM(units=rnn_filters_last,
+                             activation=rnn_activation,
+                             dropout=s_dropout,
+                             recurrent_dropout=rnn_dropout,
+                             return_sequences=False,
+                             unroll=rnn_unroll,
+                             kernel_regularizer=regularizer,
+                             recurrent_regularizer=rnn_regularizer,
+                             name='%s_LSTM_last'%(name_base),
+                             )(tensor)
+
 
         # Tack on global max pooling
         if global_max_pool:
@@ -254,7 +293,7 @@ class ConvolutionalNeuralNetwork:
 
         # TODO: check input_shape form
         input_len = len(input_shape)
-        assert (input_len >= 2 and input_len <= 4) or (input_len == 1 and tokenizer), "CNN Input Shape must have dimensionality 2, 3, or 4"
+        assert (input_len >= 2 and input_len <= 4) or (input_len == 1 and (tokenizer or embedding)), "CNN Input Shape must have dimensionality 2, 3, or 4"
     
         # TODO: check output_shape form
 
@@ -264,7 +303,7 @@ class ConvolutionalNeuralNetwork:
         # Convolution dimensionality
         # Tokenizer only supports 1D.  Otherwise, infer from input shape
 
-        if tokenizer:
+        if tokenizer or embedding:
             conv_type = 'C1'
         else:
             conv_type = ['C1', 'C2', 'C3'][len(input_shape)-2]
@@ -326,7 +365,7 @@ class ConvolutionalNeuralNetwork:
                                                              conv_pool=conv_pool_size,
                                                              conv_strides=conv_strides,
                                                              conv_type=conv_type,
-                                                             name_base=name_base + '_RNN',
+                                                             name_base=name_base,
                                                              conv_activation=conv_activation,
                                                              regularizer=regularizer,
                                                              s_dropout=spatial_dropout,
@@ -530,7 +569,7 @@ class ConvolutionalNeuralNetwork:
 
         # TODO: check input_shape form
         input_len = len(input_shape)
-        assert (input_len >= 2 and input_len <= 4) or (input_len == 1 and tokenizer), "CNN Input Shape must have dimensionality 2, 3, or 4"
+        assert (input_len >= 2 and input_len <= 4) or (input_len == 1 and (tokenizer or embedding)), "CNN Input Shape must have dimensionality 2, 3, or 4"
     
         # TODO: check output_shape form
 
