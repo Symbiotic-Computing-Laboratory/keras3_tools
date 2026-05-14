@@ -258,11 +258,12 @@ class ConvolutionalNeuralNetwork:
                            learning_rate:float=0.001,
                            loss:str='mse',
                            metrics:[str]=None,
+                           metrics_weighted:[str]=None,
                            opt=None,
                            **kwargs):
 
         ##################
-        # Less frequentyly used arguments are in kwargs
+        # Less frequently used arguments are in kwargs
 
         # Support for tokenizer and embedding layers
         tokenizer = kwargs.pop("tokenizer", False)
@@ -423,7 +424,8 @@ class ConvolutionalNeuralNetwork:
         # Create the model
         model = Model(input_tensor, tensor)
     
-        model.compile(loss=loss, optimizer=opt, metrics=metrics)
+        model.compile(loss=loss, optimizer=opt, metrics=metrics,
+            weighted_metrics=metrics_weighted)
 
         if model_text_vectorization is None:
             return model
@@ -533,12 +535,13 @@ class ConvolutionalNeuralNetwork:
                            batch_normalization=False,
                            learning_rate=0.001,
                            loss='mse',
-                           metrics=[],
+                           metrics:[str]=None,
+                           metrics_weighted:[str]=None,
                            opt=None,
                            **kwargs):
 
         ##################
-        # Less frequentyly used arguments are in kwargs
+        # Less frequently used arguments are in kwargs
 
         # Support for tokenizer and embedding layers
         tokenizer = kwargs.pop("tokenizer", False)
@@ -683,7 +686,8 @@ class ConvolutionalNeuralNetwork:
         # Create the model
         model = Model(input_tensor, tensor)
     
-        model.compile(loss=loss, optimizer=opt, metrics=metrics)
+        model.compile(loss=loss, optimizer=opt, metrics=metrics, 
+                      weighted_metrics=metrics_weighted)
 
         if model_text_vectorization is None:
             return model
