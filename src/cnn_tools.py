@@ -309,7 +309,7 @@ class ConvolutionalNeuralNetwork:
         else:
             conv_type = ['C1', 'C2', 'C3'][len(input_shape)-2]
 
-        assert conv_type is 'C1', 'RNN requires 1D data'
+        assert conv_type == 'C1', 'RNN requires 1D data'
         
         #print("Convolution type:", conv_type)
     
