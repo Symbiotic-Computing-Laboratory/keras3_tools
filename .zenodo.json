@@ -1,0 +1,47 @@
+{
+  "title": "Keras 3 Tools: a Toolkit for Constructing Deep Neural Network Models",
+  "description": "This toolkit contains modules for constructing stacks of fully-connected, convolutional, and recurrent neural networks, as well as full Keras 3 networks based on these modules.",
+  "notes": "Copyright (2026). Andrew H. Fagg, Luke Sewell, and Mel Wilson Reyes",
+  "creators": [
+    {
+      "name": "Fagg, Andrew H.",
+      "affiliation": "University of Oklahoma",
+      "orcid": "0000-0002-5636-9697"
+    },
+    {
+      "name": "Sewell, Luke",
+      "affiliation": "University of Oklahoma",
+      "orcid": "0009-0000-0359-4148"
+    },
+    {
+      "name": "Wilson Reyes, Mel",
+      "affiliation": "Symbiotic Computing Laboratory"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Fagg, Andrew H.",
+      "affiliation": "University of Oklahoma",
+      "orcid": "0000-0002-5636-9697",
+      "type": "ContactPerson"
+    },
+    {
+      "name": "Symbiotic Computing Laboratory",
+      "type": "ResearchGroup"
+    }
+  ],
+  "keywords": [
+    "deep neural networks",
+    "machine learning",
+    "keras3",
+    "tensorflow",
+  ],
+  "license": "cc-by-4.0",
+  "upload_type": "software",
+  "grants": [
+    { "id": "021nxhr62::2019758" }
+  ],
+  "communities": [
+    { "identifier": "ai2es" }
+  ]
+}
