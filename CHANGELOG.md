@@ -1,5 +1,8 @@
 # Keras3 Tools Changelog
 
+## 2026-09-02 v 0.2.1 Andrew H. Fagg
+- Fixed Zenodo formatting problem
+
 ## 2026-09-02 v 0.2.0 Luke Sewell
 - Add support for UNet networks
 
